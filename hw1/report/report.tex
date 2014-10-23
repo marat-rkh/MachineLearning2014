@@ -1,0 +1,105 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\begin{document}
+\begin{center}
+Results analysis for homework 1\\
+Marat Khabibullin
+\end{center}
+
+Let's look at the program output shown in Figure 1. One can see (according to p-values) there is a depedency between Sales volume and predictors under consideration and Newspaper predictor is the least significant (because of the high p-value).\\
+Considering mean RSS, we have higher value for the test set and it could be explained by the fact that the model has been created using training data and best fits for this data set.\\
+\\
+Scatterplots are shown in Figure 2 and 3 and one can notice clear linear dependance.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/ord.png}
+\caption{Model with all predictors \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/pltOrdTrain.png}
+\caption{Scatterplot for training set (all predictors) \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/pltOrdTest.png}
+\caption{Scatterplot for test set (all predictors) \label{overflow}}
+\end{figure}
+\vspace{5cm}
+
+Now let's consider program output for model with Newspapers predictor removed (Fig. 4). One may notice in comparison with the previous reults (see Fig. 1) F-statistics value has grown significantly, so we can conclude model has become better (better discribes real data).\\
+Moreover, rss values are almost the same as in the model with all predictors. It proves the Nespaper predictor's insignificance.\\
+Scatterplots in Figures 5 and 6 still show linear behaviour.\\
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/noNews.png}
+\caption{Model with Newspapers predictor removed \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/pltNoNewsTrain.png}
+\caption{Scatterplot for training set (Newspapers predictor removed) \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/pltNoNewsTest.png}
+\caption{Scatterplot for test set (Newspapers predictor removed) \label{overflow}}
+\end{figure}
+\vspace{5cm}
+
+Next program output (Fig. 7) shows the model with TV predictor removed. F-statistic value has become very low that is corresponds to the fact the TV predictor is significant in our model in general. Moreover, removing significant predictor we have increased rss values for both training and test data sets.\\
+Scatterplots in Figures 8 and 9 also reflect the fact of removing significant predictor - the dependencies are not linear anymore, predicted data badly corressponts to actual one.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/noTv.png}
+\caption{Model with Tv predictor removed \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/pltNoTvTrain.png}
+\caption{Scatterplot for training set (Tv predictor removed) \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/pltNoTvTest.png}
+\caption{Scatterplot for test set (Tv predictor removed) \label{overflow}}
+\end{figure}
+\vspace{5cm}
+
+The last model to consider is one with all predictor removed (Fig. 10). As we can see rss values have drastically increased in comparison with the initial model values. Also, scatterplots in Figures 11 and 12 show predicted Sales volumes are constant and equals to calculated Intercept value (see Fig. 10). It clearly represents independency of model predictions and input data making such model useless.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/int.png}
+\caption{Model with all predictors removed \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/pltIntTrain.png}
+\caption{Scatterplot for training set (all predictors removed) \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures/pltIntTest.png}
+\caption{Scatterplot for test set (all predictors removed) \label{overflow}}
+\end{figure}
+
+In conclusion it is important to note that on different program runs different result are observed. For example, one program run can give higher rss value for test data set in comparison to training data set. This fact could be explained by randomness of choosing what part of all the input data will be the test one and what will be the training one.
+
+\end{document}
