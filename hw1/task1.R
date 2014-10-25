@@ -13,15 +13,15 @@ adv.train <- adv[trainInds, ]
 adv.test <- adv[-trainInds, ]
 
 #funcs
-rss <- function(reals, preds) {
-    return(sum((reals - preds)^2))
+meanRss <- function(reals, preds) {
+    return(mean((reals - preds)^2))
 }
 
 predWithRss <-function(mod) {
     predTrain <- predict(mod, adv.train)
     predTest <- predict(mod, adv.test)
-    rssTrain <- rss(adv.train$Sales, predTrain) / trainSize
-    rssTest <- rss(adv.test$Sales, predTest) / testSize
+    rssTrain <- meanRss(adv.train$Sales, predTrain)
+    rssTest <- meanRss(adv.test$Sales, predTest)
     return (list(xyplot(predTrain ~ adv.train$Sales), rssTrain, xyplot(predTest ~ adv.test$Sales), rssTest))
 }
 
@@ -34,8 +34,8 @@ pltTrain <- xyplot(predTrain ~ adv.train$Sales)
 
 # 2. rss
 print(summary(l))
-rssTrain <- rss(adv.train$Sales, predTrain) / trainSize
-rssTest <- rss(adv.test$Sales, predTest) / testSize
+rssTrain <- meanRss(adv.train$Sales, predTrain)
+rssTest <- meanRss(adv.test$Sales, predTest)
 print("Mean RSS for train set: ")
 print(rssTrain)
 print("Mean RSS for test set: ")
@@ -65,3 +65,52 @@ print("Mean RSS for train set with intercept only: ")
 print(resInt[[2]])
 print("Mean RSS for test set with intercept only: ")
 print(resInt[[4]])
+
+#4. Additional task: polinomial regression
+p1 <- lm(Sales ~ poly(TV, 1, raw=TRUE), data=adv.train)
+print(summary(p1))
+print("AIC for polynomial regression, deg = 1: ")
+print(AIC(p1))
+print("BIC for polynomial regression, deg = 1: ")
+print(BIC(p1))
+resP1 <- predWithRss(p1)
+print("Mean RSS for train set (polynomial regression, deg = 1): ")
+print(resP1[[2]])
+print("Mean RSS for test set (polynomial regression, deg = 1): ")
+print(resP1[[4]])
+
+p2 <- lm(Sales ~ poly(TV, 2, raw=TRUE), data=adv.train)
+print(summary(p2))
+print("AIC for polynomial regression, deg = 2: ")
+print(AIC(p2))
+print("BIC for polynomial regression, deg = 2: ")
+print(BIC(p2))
+resP2 <- predWithRss(p2)
+print("Mean RSS for train set (polynomial regression, deg = 2): ")
+print(resP2[[2]])
+print("Mean RSS for test set (polynomial regression, deg = 2): ")
+print(resP2[[4]])
+
+p3 <- lm(Sales ~ poly(TV, 3, raw=TRUE), data=adv.train)
+print(summary(p3))
+print("AIC for polynomial regression, deg = 3: ")
+print(AIC(p3))
+print("BIC for polynomial regression, deg = 3: ")
+print(BIC(p3))
+resP3 <- predWithRss(p3)
+print("Mean RSS for train set (polynomial regression, deg = 3): ")
+print(resP3[[2]])
+print("Mean RSS for test set (polynomial regression, deg = 3): ")
+print(resP3[[4]])
+
+p4 <- lm(Sales ~ poly(TV, 4, raw=TRUE), data=adv.train)
+print(summary(p4))
+print("AIC for polynomial regression, deg = 4: ")
+print(AIC(p4))
+print("BIC for polynomial regression, deg = 4: ")
+print(BIC(p4))
+resP4 <- predWithRss(p4)
+print("Mean RSS for train set (polynomial regression, deg = 4): ")
+print(resP4[[2]])
+print("Mean RSS for test set (polynomial regression, deg = 4): ")
+print(resP4[[4]])

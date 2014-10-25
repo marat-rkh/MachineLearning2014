@@ -100,6 +100,92 @@ The last model to consider is one with all predictor removed (Fig. 10). As we ca
 \caption{Scatterplot for test set (all predictors removed) \label{overflow}}
 \end{figure}
 
-In conclusion it is important to note that on different program runs different result are observed. For example, one program run can give higher rss value for test data set in comparison to training data set. This fact could be explained by randomness of choosing what part of all the input data will be the test one and what will be the training one.
+In conclusion it is important to note that on different program runs different result are observed. For example, one program run can give higher rss value for test data set in comparison to training data set. This fact could be explained by randomness of choosing what part of all the input data will be the test one and what will be the training one.\\
+
+\vspace{5cm}
+
+\begin{center}
+Additional task: polynomial regression
+\end{center}
+Let's look at the Figures 13, 14, 15 and 16 representing polynomial regression models with degrees 1, 2, 3 and 4 respectively.\\
+First of all, F-statistics are significantly lower in comparison with one in linear model with Newspapers predictor removed (of course, current and previous results are obtained from different program runs, but still avarage value of F-statistics for linear model with Newspapers predictor removed between runs is close to 500). Moreovere, as the degree is increasing the F-statistics value is decreasing. Also, while degree is increasing predictors become more and more insignificant having predictor in the power of 1 the most significant among the others.\\
+To study models' suitability AIC and BIC values are also shown. As one can notice, both grow slowly as polynomial degree increases having average value approximately equals to 700. It is important to note AIC and BIC values for linear model with Newspapers predictor removed are approximately 530.\\
+Mean RSS values for training and test data are pretty high and remain almost unchanged as polynomial degree increases.\\
+Figures 17 - 20 and 21 - 24 show scatterplots for training and test data respectively. As degree is increasing the scatterplots are almost unchanged and resemble scatterblot for degree = 1. It prooves the fact predictors in powers higher than 1 are least significant and don't affect the model much.\\
+\\
+All the obtained results show the polynomial models are less suitable for the data set under study then linear ones and the higher the degree the worst model describes our data. So, speaking about using polynomial regression for this task the best choice is 2nd degree polynomial.
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/poly1.png}
+\caption{Polynomial regression with deg = 1 \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/poly2.png}
+\caption{Polynomial regression with deg = 2 \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/poly3.png}
+\caption{Polynomial regression with deg = 3 \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/poly4.png}
+\caption{Polynomial regression with deg = 4 \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/pltTr1.png}
+\caption{Scatterplot for training set (polynomial regression with deg = 1) \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/pltTr2.png}
+\caption{Scatterplot for training set (polynomial regression with deg = 2) \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/pltTr3.png}
+\caption{Scatterplot for training set (polynomial regression with deg = 3) \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/pltTr4.png}
+\caption{Scatterplot for training set (polynomial regression with deg = 4) \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/pltTe1.png}
+\caption{Scatterplot for test set (polynomial regression with deg = 1) \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/pltTe2.png}
+\caption{Scatterplot for test set (polynomial regression with deg = 2) \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/pltTe3.png}
+\caption{Scatterplot for test set (polynomial regression with deg = 3) \label{overflow}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=140mm]{figures2/pltTe4.png}
+\caption{Scatterplot for test set (polynomial regression with deg = 4) \label{overflow}}
+\end{figure}
 
 \end{document}
