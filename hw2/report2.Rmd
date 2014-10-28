@@ -1,0 +1,145 @@
+---
+title: "Honwork 2, task 2"
+author: "Marat Habibullin"
+date: "27.10.2014"
+output: pdf_document
+---
+
+***Part 1: Private universities model***
+```{r}
+library(MASS)
+library(lattice)
+library(latticeExtra)
+library(e1071)
+
+df <- read.csv2(file = "input-data/I.csv")
+df <- subset(df, select = c(PPIND, NEW10, FULLTIME, IN_STATE, ROOM, ADD_FEE,
+                            PH_D, GRADUAT, SAL_FULL, NUM_FULL))
+df$PPIND <- factor(df$PPIND, labels = c("Public", "Private"))
+df <- na.exclude(df)
+df.priv <- subset(df, PPIND == "Private")
+
+# all predictors with log
+fit2 <- lm(NEW10 ~ FULLTIME + log(IN_STATE) + log(ROOM) + log(ADD_FEE) + 
+           log(SAL_FULL) + PH_D + GRADUAT + NUM_FULL, data = df.priv)
+summary(fit2)
+```
+
+Following the same reason as it was discussed in class we have removed AVRCOMB predictor in advance. Next let's try to simplify our model manually. We can start with the least significant predictors - FULLTIME and PH_D:
+
+```{r}
+# manual removing
+fit2.manual <- lm(NEW10 ~ log(IN_STATE) + log(ROOM) + log(ADD_FEE) + 
+                    log(SAL_FULL) + GRADUAT + NUM_FULL, data = df.priv)
+summary(fit2.manual)
+AIC(fit2.manual)
+tune(lm, fit2.manual$call$formula, data = df.priv,
+     tunecontrol = tune.control(sampling = "cross", cross = 36))
+levelplot(cor(fit2.manual$model)^2, par.settings = list(regions = list(col = colorRampPalette(grey(1:0)))),
+          scales = list(x = list(rot = 90)), xlab = "", ylab = "")
+```
+
+SAL_FULL correlates with GRADUAT and NUM_FULL and logically it is semantically very strange predictor to be significant. Let's remove it:
+
+```{r}
+fit2.manual <- lm(NEW10 ~ log(IN_STATE) + log(ROOM) + log(ADD_FEE) + 
+                                    GRADUAT + NUM_FULL, data = df.priv)
+summary(fit2.manual)
+AIC(fit2.manual)
+tune(lm, fit2.manual$call$formula, data = df.priv,
+     tunecontrol = tune.control(sampling = "cross", cross = 36))
+levelplot(cor(fit2.manual$model)^2, par.settings = list(regions = list(col = colorRampPalette(grey(1:0)))),
+          scales = list(x = list(rot = 90)), xlab = "", ylab = "")
+```
+
+Next let's remove the least significant predictor - ADD_FEE:
+
+```{r}
+fit2.manual <- lm(NEW10 ~ log(IN_STATE) + log(ROOM) + 
+                    GRADUAT + NUM_FULL, data = df.priv)
+summary(fit2.manual)
+AIC(fit2.manual)
+tune(lm, fit2.manual$call$formula, data = df.priv,
+     tunecontrol = tune.control(sampling = "cross", cross = 36))
+levelplot(cor(fit2.manual$model)^2, par.settings = list(regions = list(col = colorRampPalette(grey(1:0)))),
+          scales = list(x = list(rot = 90)), xlab = "", ylab = "")
+```
+
+Looking at the correlation matrix plot one can notice ROOM and IN_STATE corellate. Moreover in real world private universities' students have rich parents so they don't bother much about money. Let's remove both predictors:
+
+```{r}
+fit2.manual <- lm(NEW10 ~
+                    GRADUAT + NUM_FULL, data = df.priv)
+summary(fit2.manual)
+AIC(fit2.manual)
+tune(lm, fit2.manual$call$formula, data = df.priv,
+     tunecontrol = tune.control(sampling = "cross", cross = 36))
+levelplot(cor(fit2.manual$model)^2, par.settings = list(regions = list(col = colorRampPalette(grey(1:0)))),
+          scales = list(x = list(rot = 90)), xlab = "", ylab = "")
+```
+
+Here we stop with manual removing. One can notice the AIC values have been increasing within model simplification, not much but nevertheless. On the other hand cross validation test error has been decreasing a little bit faster than AIC. The situation with AIC is kind of strange but we prefer to rely on cross validation here = ).
+
+Let's now try simplify initial model with stepAIC:
+
+```{r}
+# removing with stepAIC
+fit2.aic <- stepAIC(fit2)
+summary(fit2.aic)
+AIC(fit2.aic)
+tune(lm, fit2.aic$call$formula, data = df.priv,
+     tunecontrol = tune.control(sampling = "cross", cross = 36))
+levelplot(cor(fit2.aic$model)^2, par.settings = list(regions = list(col = colorRampPalette(grey(1:0)))),
+          scales = list(x = list(rot = 90)), xlab = "", ylab = "")
+```
+
+We can see that IN_STATE is not significant so let's remove it:
+
+```{r}
+fit2.aic <- update(fit2.aic, . ~ . - log(IN_STATE))
+summary(fit2.aic)
+AIC(fit2.aic)
+tune(lm, fit2.aic$call$formula, data = df.priv,
+     tunecontrol = tune.control(sampling = "cross", cross = 36))
+levelplot(cor(fit2.aic$model)^2, par.settings = list(regions = list(col = colorRampPalette(grey(1:0)))),
+          scales = list(x = list(rot = 90)), xlab = "", ylab = "")
+```
+
+Here we stop. As we can see this model is better than one created by manual removing. But this model is strange in fact having SAL_FULL as a significant predictor. We decide to rely on logic and use manual model as the final model for private universities. Moreover it will be very convenient later to merge private and public universities because our model of private unversities is a submodel of public ones.
+
+The model has a pretty clear interpretation: the best newcomer students choosing private university prefer one with higher graduation percentage and higher number of good lecturers (full professors) and don't bother much about money factors due to a rich parents.
+
+***Part 2: general model***
+
+```{r}
+# general model
+contrasts(df$PPIND) <- contr.treatment
+contrasts(df$PPIND)
+df$PPIND <- as.factor(df$PPIND)
+
+gm <- lm(formula = NEW10 ~ (log(IN_STATE) + log(ADD_FEE) + GRADUAT + NUM_FULL) * PPIND, data = df)
+summary(gm)
+AIC(gm)
+tune(lm, gm$call$formula, data = df,
+     tunecontrol = tune.control(sampling = "cross", cross = 95))
+
+gm.aic <- stepAIC(gm)
+summary(gm.aic)
+AIC(gm.aic)
+tune(lm, gm.aic$call$formula, data = df,
+     tunecontrol = tune.control(sampling = "cross", cross = 95))
+```
+
+Finally let's try to interpret general model predictors' coefficients. 
+
+First of all we have `-13.6 * log(IN_STATE) + 24 * log(IN_STATE) * PPIND`. That means that in public universities the lower tuition fees are the higher percentage of good newcomer students is and vice versa in private ones. The first thing is pretty intuitive. The second one could be interpreted in the following way: private universities' students being from rich families don't bother much about money moreover high fees may be used as university's quality factor or prestige value.
+
+`log(ADD_FEE)` has a negative influence on a percentage of good newcomers in both cases. So nobody likes to spend additional money even rich people because in this case the reasons of additional fees are not completely understandable (in the case of IN_STATE fees there is a clear reason for this).
+
+`GRADUAT` has a positive influence on the `NEW10` moreover the influence is higher in the case of private universities. The reason of it can be found in the fact there are not only students from wellbeing families in private universities but also there are newcomers who has not very rich parents. This students has a double interest in the graduation percentage because they don't want to spend their money in vain.
+
+`NUM_FULL` has a positive influence and again higher in private universities so may be it is all about prestige value or quality level.
+
+And finally `PPIND` has a negative coefficient so `NEW10` is a little bit higher in public universities (according to our encoding for `PPIND`).
+
+

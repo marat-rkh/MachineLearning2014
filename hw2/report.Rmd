@@ -1,0 +1,46 @@
+---
+title: "Homework 2"
+author: "Marat Habibullin"
+date: "26.10.2014"
+output: pdf_document
+---
+
+***Task 1***
+```{r =FALSE}
+library(lattice)
+library(MASS)
+
+# creating dataframe
+df <- read.table("input-data/teengambling.txt")
+df$sex <- as.factor(df$sex)
+contrasts(df$sex) <- contr.treatment
+contrasts(df$sex)
+
+# creating model
+l <- lm(gamble ~ . ^2, data = df)
+laic <- stepAIC(l, trace = 0)
+summary(laic)
+```
+
+First of all, we have removed the least significant predictors using stepAIC to make our model simplier and, as a result, one can see the Verbal predictor is not significant in our model.
+
+Let's look at the predictor's coefficients. According to encoding we use for Sex qualitive predictor (1=female, 0=male) the models are:
+
+```{r, eval=FALSE}
+gamble = -29.87 + 15.18 + 0.59*status + 13.9*income - 9.1*income - 0.17*status*income = 
+       = -14.69 + 0.59*status + 4.8*income  - 0.17*status*income -- female teens
+      
+gamble = -29.87 + 0.59*status + 13.9*income - 0.17*status*income -- male teens
+```
+
+The coefficient of Income predictor is the highest among others making this predictor one most affecting the response.
+
+One can notice the models differ in Intercept and Income coefficient. We can give the following interpretation of this fact: having the same income male teens are more inclined to spend money by gambling than female teens (mostly because males' income coefficient is higher). To prove this assumption let's look at the statterplot of Gamble vs Income (blue - male, pink - female):
+
+```{r}
+xyplot(df$gamble ~ df$income, groups=df$sex)
+```
+
+As we can see for almost every fixed value of Inclome we have higher value of Gambling for male teens than female ones.
+
+Also speaking about Income*Status predictor's coefficient (-0.17) one can say the sinergy of this two predictors is derected to reduce the value of gambling. May be it is because teens from socioeconomic well-being families better understand risks of gambling even if they earn much money.
