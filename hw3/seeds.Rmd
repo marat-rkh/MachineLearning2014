@@ -1,0 +1,180 @@
+---
+title: "Seeds"
+author: "Marat Habibullin"
+date: "26.12.2014"
+output: pdf_document
+---
+
+Load packages:
+
+```{r, echo=FALSE}
+library(MASS) # AIC(), BIC(), lda(), qda()
+library(lattice) # xyplot(), densityplot()
+library(latticeExtra) # layer()
+library(ROCR) # performance(), prediction()
+library(caret) # specificity(),
+# sensitivity()
+library(nnet) # multinom()
+library(e1071) # naiveBayes(), tune()
+specificity <- caret:::specificity
+sensitivity <- caret:::sensitivity
+ROC <- function(predicted, actual, ...) {
+  pred <- prediction(predicted, as.numeric(actual))
+  roc <- performance(pred, measure = "tpr",
+                     x.measure = "fpr", ...)
+  roc
+}
+xyplot.performance <- function(x, ...) {
+  xyplot(x@y.values[[1]] ~ x@x.values[[1]],
+         xlab = x@x.name, ylab = x@y.name,
+         type = "l", ...) + layer_(abline(a = 0,
+                                          b = 1, col = "red"))
+  55}
+AUC <- function(predicted, actual, ...) {
+  pred <- prediction(predicted, as.numeric(actual))
+  perf <- performance(pred, measure = "auc",
+                      ...)
+  perf@y.values[[1]]
+}
+roc.opt <- function(predicted, actual, cutoff = NULL,
+                    measure = c("mean", "max", "err")) {
+  pred <- prediction(predicted, as.numeric(actual))
+  perf <- performance(pred, measure = "fpr",
+                      x.measure = "fnr")
+  measure <- match.arg(measure)
+  fpr <- perf@y.values[[1]]
+  fnr <- perf@x.values[[1]]
+  npos <- pred@n.pos[[1]]
+  nneg <- pred@n.neg[[1]]
+  err <- (fpr * nneg + fnr * npos)/(npos +
+                                      nneg)
+  error.rate <- switch(measure, mean = (fpr +
+                                          fnr)/2, max = pmax(fpr, fnr), err = err)
+  if (is.null(cutoff)) {
+    i <- which.min(error.rate)
+  } else {
+    i <- which.min(abs(perf@alpha.values[[1]] -
+                         cutoff))
+  }
+  list(cutoff = perf@alpha.values[[1]][i],
+       fpr = fpr[i], fnr = fnr[i], err = err[i],
+       error.rate = error.rate[i])
+}
+simple.predict.glm <- function(x, newdata,
+                               ...) {
+  response <- predict(x, newdata, type = "response",
+                      ...)
+  factor(levels(x$model[, 1])[1 + as.integer(response >
+                                               0.5)])
+}
+my.predict.glm <- function(x, newdata = x$data,
+                           ..., measure = "max") {
+  opt <- roc.opt(fitted(x), as.numeric(x$model[,
+                                               1]), measure = measure)
+  cutoff <- opt$cutoff
+  factor(as.integer(predict(x, newdata = newdata,
+                            type = "response") > cutoff), labels = levels(x$model[,
+                                                                                  1]))
+}
+error.fun.max <- function(true, predicted) {
+  561 - min(sensitivity(predicted, true),
+            specificity(predicted, true))
+}
+error.fun.mean <- function(true, predicted) {
+  1 - mean(sensitivity(predicted, true),
+           specificity(predicted, true))
+}
+my.lda <- function(x, data, ...) {
+  out <- lda(x, data, ...)
+  out$data <- data
+  out
+}
+my.qda <- function(x, data, ...) {
+  out <- qda(x, data, ...)
+  out$data <- data
+  out
+}
+simple.predict.da <- function(...) predict(...)$class
+my.predict.da <- function(x, newdata, cutoff.data = x$data,
+                          ..., measure = "max") {
+  response <- model.frame(x$terms, cutoff.data)[,
+                                                1]
+  opt <- roc.opt(predict(x, cutoff.data)$posterior[,
+                                                   2], as.numeric(response), measure = measure)
+  cutoff <- opt$cutoff
+  factor(as.integer(predict(x, newdata = newdata)$posterior[,
+                                                            2] > cutoff), labels = levels(response))
+}
+```
+
+Read data:
+
+```{r}
+seeds = read.table("data/seeds_dataset.txt", comment.char = "#")
+names(seeds) = c("area", "perimeter", "compactness", "length", "width", "assymetry", "groove", "stype")
+seeds$stype = factor(seeds$stype)
+```
+
+Let's use multinomial regression:
+
+```{r}
+mln <- multinom(stype ~ ., data = seeds, trace = FALSE)
+
+tn.mln <- tune(multinom, stype ~ ., 
+               data = seeds, 
+               trace = FALSE, 
+               tunecontrol = tune.control(sampling = "cross"))
+tn.mln$performances
+```
+
+Pretty good. Let's try to simplify the model using stepAIC:
+
+```{r}
+mln_aic = stepAIC(mln)
+
+tn.mln.aic <- tune(multinom, 
+                   mln_aic$call$formula, 
+                   data = seeds, 
+                   trace = FALSE, 
+                   tunecontrol = tune.control(sampling = "cross"))
+tn.mln.aic$performances
+```
+
+The error is the same, so it's a good idea to take the second one. But first let's leave one out approach:
+
+```{r}
+tn.full.loo <- tune(multinom, stype ~ ., 
+     data = seeds, 
+     trace = FALSE, 
+     tunecontrol = tune.control(sampling = "cross", cross = nrow(seeds)))
+tn.full.loo$performances
+
+tn.aic.loo <- tune(multinom, 
+     mln_aic$call$formula, 
+     data = seeds, 
+     trace = FALSE, 
+     tunecontrol = tune.control(sampling = "cross", cross = nrow(seeds)))
+tn.aic.loo$performances
+```
+
+Definitely should take the second model. Let's check the results with test-train:
+
+```{r}
+train = sample(1 : nrow(seeds), 0.7 * nrow(seeds))
+
+mln = multinom(mln_aic$call$formula, data = seeds[train, ], trace = FALSE)
+
+tbl = table(predicted = predict(mln, seeds[-train, ]), actual = seeds[-train,]$stype)
+tbl
+
+chisq.test(tbl)
+```
+
+Let's also check what lda and qda say:
+
+```{r}
+tune(lda, stype ~ ., data = seeds, predict.func = simple.predict.da)
+tune(lda, mln_aic$call$formula, data = seeds, predict.func = simple.predict.da)
+tune(qda, stype ~ ., data = seeds, predict.func = simple.predict.da)
+tune(qda, mln_aic$call$formula, data = seeds, predict.func = simple.predict.da)
+```
