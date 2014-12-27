@@ -1,0 +1,64 @@
+---
+title: "correlations"
+author: "Marat Habibullin"
+date: "27.12.2014"
+output: pdf_document
+---
+
+```{r}
+library(e1071) 
+library(MASS)
+
+samples_num = 50
+predictors_num = 10000 + 1 # + 1 for response
+
+# let's get samples from normal distribution 
+mat = matrix(rnorm(samples_num * predictors_num), samples_num, predictors_num)
+data_frame = data.frame(mat)
+
+# let's extract most correlated predictors
+data_abs_cors = abs(cor(data_frame))
+sorted_df = data_frame[, order(data_abs_cors[1, ], decreasing = TRUE)]
+most_cor_df = sorted_df[, 1:21]
+tune(lm, X1 ~ ., data = most_cor_df, tunecontrol = tune.control(cross = nrow(most_cor_df)))
+
+# as we can see, the error is pretty good
+# let's try to predict response for test samples using obtained predictors
+mat = matrix(rnorm(samples_num * predictors_num), samples_num, predictors_num)
+data_frame = data.frame(mat)
+test_df = data_frame[, names(most_cor_df)]
+tune(lm, X1 ~ ., data = test_df, tunecontrol = tune.control(cross = nrow(test_df)))
+
+# here the error is high so we have overfitting
+# let's look at predictors
+model = lm(X1 ~ ., data = test_df)
+summary(model)
+
+# all predictors are insignificant!
+
+model.aic = stepAIC(model)
+summary(model.aic)
+
+# here the situations is the same
+
+# now let's try crossvalidations instead of test train
+# we need an appropriate learner function
+
+special_lm <- function(formula, data, subset) {
+  train = data[subset, ]
+  train_cor_abs = abs(cor(train))
+  train_selected = train[, order(train_cor_abs[1, ], decreasing = TRUE)[1:21]]
+  return(lm(X1 ~ ., data = train_selected))
+}
+
+# I have reduced the predictors size here because with 10000 my computer 
+# hangs (high computational complexity)
+samples_num = 50
+predictors_num = 7500 + 1 # + 1 for response
+
+# let's get samples from normal distribution 
+mat = matrix(rnorm(samples_num * predictors_num), samples_num, predictors_num)
+data_frame = data.frame(mat)
+
+tune(special_lm, X1 ~ ., data = data_frame, tunecontrol = tune.control(sampling = "cross"))
+```
